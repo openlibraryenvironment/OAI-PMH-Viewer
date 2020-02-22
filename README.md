@@ -1,7 +1,7 @@
 # OAI-PMH-Viewer
 
 ## Purpose
-Lightweight web service for entering an OAI-PMH URL, verify that the URL retrieves data from the intended OAI-PMH archive, and inspect a few returned records for format and content.
+Bare bones web service for entering an OAI-PMH URL, verifying that the URL retrieves data from the intended OAI-PMH archive, and looking over some returned records for an initial format and content check.
 
 ## API
 The service presents as a HTML form that responds to manual user input
