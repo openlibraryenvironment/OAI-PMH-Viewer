@@ -49,7 +49,7 @@ public class BrowseArchive extends AbstractVerticle {
       HttpServerResponse resp = routingContext.response();
 
       String inputOaiUrl = req.getFormAttribute("oaiurl");
-      
+
       if (inputOaiUrl != null) {
         String httpUrl = setProtocolToHttp(inputOaiUrl);
         URL pURL;
@@ -58,21 +58,21 @@ public class BrowseArchive extends AbstractVerticle {
 
           // If specific verb requested, use that, otherwiser use provided query as is (if any)
           String verb = req.getFormAttribute("verb");
-          String query = 
+          String query =
             Arrays.asList("Identify",
                           "ListSets",
-                          "ListMetadataFormats").contains(verb) ? 
-            "verb="+verb : 
+                          "ListMetadataFormats").contains(verb) ?
+            "verb="+verb :
             (pURL.getQuery() != null ? pURL.getQuery() : "");
 
-          final String finalOaiUrl = 
-                  pURL.getProtocol() + "://" 
-                  + pURL.getHost() 
-                  + pURL.getPath() 
+          final String finalOaiUrl =
+                  pURL.getProtocol() + "://"
+                  + pURL.getAuthority()
+                  + pURL.getPath()
                   + (query.isEmpty() ? "" : "?" + query);
 
           // Attempt OAI-PMH request
-          client.get(pURL.getHost(), pURL.getPath() + (query.isEmpty() ? "" : "?" + query))
+          client.get(pURL.getAuthority(), pURL.getPath() + (query.isEmpty() ? "" : "?" + query))
             .send(ar -> {
               if (ar.succeeded()) {
                 HttpResponse<Buffer> oaiResponse = ar.result();
@@ -86,7 +86,7 @@ public class BrowseArchive extends AbstractVerticle {
                     + " " + ar.result().statusMessage()
                     + LS + LS
                     + firstCharactersOf(oaiResponse.bodyAsString(),2000);
-                  String page = buildPage(inputOaiUrl, finalOaiUrl, error); 
+                  String page = buildPage(inputOaiUrl, finalOaiUrl, error);
                   resp.end(page);
                 }
               } else {
@@ -96,13 +96,13 @@ public class BrowseArchive extends AbstractVerticle {
               }
             });
         } catch (MalformedURLException mue) {
-          String page = buildPage(inputOaiUrl, 
+          String page = buildPage(inputOaiUrl,
                                   "Couldn't create valid OAI request",
-                                  mue.getMessage()); 
+                                  mue.getMessage());
           resp.end(page);
         } catch (Exception e) {
-          String page = buildPage(inputOaiUrl, 
-                                  "Couldn't create valid OAI request", 
+          String page = buildPage(inputOaiUrl,
+                                  "Couldn't create valid OAI request",
                                   e.getMessage());
           resp.end(page);
         }
@@ -131,7 +131,7 @@ public class BrowseArchive extends AbstractVerticle {
       + " <form id=\"request\" method=\"post\" >"
       + "  <label for=\"url\">OAI-PMH URL</label><br>"
       + "  <input type=\"text\" size=\"140\" id=\"oaiurl\" "
-      + "      name=\"oaiurl\" value=\"" 
+      + "      name=\"oaiurl\" value=\""
       +           (pOaiUrl != null ? pOaiUrl : "") + "\"><br><br>"
       + "  <input type=\"submit\" name=\"verb\" value=\"Identify\"> "
       + "  <input type=\"submit\" name=\"verb\" value=\"ListSets\"> "
@@ -151,8 +151,8 @@ public class BrowseArchive extends AbstractVerticle {
 
   private String prettyPrintOaiResponseOrDump (String resp) {
     String prettyOaiXmlOrDump;
-    if (resp != null && 
-         (resp.contains("<OAI-PMH") || resp.contains("<error_code>"))) 
+    if (resp != null &&
+         (resp.contains("<OAI-PMH") || resp.contains("<error_code>")))
     {
       try {
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
@@ -169,24 +169,24 @@ public class BrowseArchive extends AbstractVerticle {
         transformer.transform(source, result);
         prettyOaiXmlOrDump = result.getWriter().toString();
       } catch (IOException | IllegalArgumentException | ParserConfigurationException | TransformerException | SAXException e) {
-        prettyOaiXmlOrDump = "Could not parse/transform response: " 
+        prettyOaiXmlOrDump = "Could not parse/transform response: "
                 + e.getMessage() + LS + resp;
       }
     } else {
       prettyOaiXmlOrDump =
-        "Did not receieve a proper OAI-PMH response for the given URL: " 
+        "Did not receieve a proper OAI-PMH response for the given URL: "
         + LS + LS
         + (resp != null ? firstCharactersOf(resp, 2000) : " No response created.");
     }
     return prettyOaiXmlOrDump;
   }
-  
+
   private String setProtocolToHttp (String url) {
     return (
-      url != null && !url.isEmpty() && !url.matches("https?://.*")) ? 
+      url != null && !url.isEmpty() && !url.matches("https?://.*")) ?
       "http://" + url : url;
   }
-  
+
   private String firstCharactersOf(String str, int chars) {
     if (str != null) {
       return str.substring(0, Math.min(str.length()-1,chars));
