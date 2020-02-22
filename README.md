@@ -15,4 +15,5 @@ run `mvn install` from root directory
 
 ## Starting the service
 run `java -jar [path-to-jar-file/]OAI-PMH-Viewer-{version}-fat.jar` 
+(the service would currently listen on port 8088)
 
