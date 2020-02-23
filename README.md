@@ -14,6 +14,9 @@ The service presents as a HTML form that responds to manual user input
 run `mvn install` from root directory
 
 ## Starting the service
-run `java -jar [path-to-jar-file/]OAI-PMH-Viewer-{version}-fat.jar` 
+run `java -jar [path-to-jar-file/]OAI-PMH-Viewer-{version}-fat.jar`
 
-The service would currently listen on port 8088
+The service listens on port 8088 by default. To change the service port to, say, 8000, run:
+
+`java -Dhttp.port=8000 -jar [path-to-jar-file/]OAI-PMH-Viewer-{version}-fat.jar`
+

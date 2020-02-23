@@ -119,8 +119,11 @@ public class BrowseArchive extends AbstractVerticle {
       }
     });
 
-    server.requestHandler(router).listen(8088, result -> {
+    final int port = getPort();
+
+    server.requestHandler(router).listen(port, result -> {
       if (result.succeeded()) {
+        System.out.println("OAI-PMH-Viever listening on port [" + port + "]");
         promise.complete();
       } else {
         promise.fail(result.cause());
@@ -198,5 +201,15 @@ public class BrowseArchive extends AbstractVerticle {
     } else {
       return str;
     }
+  }
+
+  private int getPort () {
+    int port;
+    try {
+      port = Integer.parseInt(System.getProperty("http.port"));
+    } catch (NumberFormatException | NullPointerException e) {
+      port = 8088;
+    }
+    return port;
   }
 }
