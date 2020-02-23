@@ -49,28 +49,35 @@ public class BrowseArchive extends AbstractVerticle {
       HttpServerResponse resp = routingContext.response();
 
       String inputOaiUrl = req.getFormAttribute("oaiurl");
+      String action = req.getFormAttribute("action");
+      String verb = req.getFormAttribute("verb");
 
-      if (inputOaiUrl != null) {
-        String httpUrl = setProtocolToHttp(inputOaiUrl);
+      if (inputOaiUrl != null && !inputOaiUrl.isEmpty() && !"Clear".equals(action)) {
         URL pURL;
         try {
-          pURL = new URL(httpUrl);
+          if (!inputOaiUrl.matches("https?://.*")) {
+            // Allow user to enter a URI without protocol
+            pURL = new URL("http://"+inputOaiUrl);
+          } else {
+            pURL = new URL(inputOaiUrl);
+          }
 
-          // If specific verb requested, use that, otherwiser use provided query as is (if any)
-          String verb = req.getFormAttribute("verb");
+          // If specific verb was requested, use that, otherwise ..
+          // if the entered URL itself contains a verb, use query as is, otherwise ..
+          // if no verb present, use verb 'Identify' for the specified URL
+          //                                    (thus assuming it is a base URL)
           String query =
             Arrays.asList("Identify",
                           "ListSets",
                           "ListMetadataFormats").contains(verb) ?
             "verb="+verb :
-            (pURL.getQuery() != null ? pURL.getQuery() : "");
+            (pURL.getQuery() != null ? pURL.getQuery() : "verb=Identify");
 
           final String finalOaiUrl =
-                  pURL.getProtocol() + "://"
+                  (!pURL.getProtocol().isEmpty() ? pURL.getProtocol() : "http") + "://"
                   + pURL.getAuthority()
                   + pURL.getPath()
                   + (query.isEmpty() ? "" : "?" + query);
-
           // Attempt OAI-PMH request
           client.get(pURL.getAuthority(), pURL.getPath() + (query.isEmpty() ? "" : "?" + query))
             .send(ar -> {
@@ -121,7 +128,7 @@ public class BrowseArchive extends AbstractVerticle {
     });
   }
 
-  private String buildPage (String pOaiUrl, String requestUri, String response) {
+  private String buildPage (String inputOaiUrl, String finalRequestUrl, String oaiResponse) {
 
     return "<head>"
       + " <title>OAI-PMH browser</title>"
@@ -129,19 +136,23 @@ public class BrowseArchive extends AbstractVerticle {
       + "<body>"
       + " <H1>Test an OAI-PMH service</H1>"
       + " <form id=\"request\" method=\"post\" >"
-      + "  <label for=\"url\">OAI-PMH URL</label><br>"
-      + "  <input type=\"text\" size=\"140\" id=\"oaiurl\" "
+      + "  <label for=\"url\">Enter OAI-PMH URL &nbsp;&nbsp;&nbsp;&nbsp;(can be a base URL or an actual query):<br>"
+      + "  <input type=\"text\" size=\"120\" id=\"oaiurl\" "
       + "      name=\"oaiurl\" value=\""
-      +           (pOaiUrl != null ? pOaiUrl : "") + "\"><br><br>"
-      + "  <input type=\"submit\" name=\"verb\" value=\"Identify\"> "
-      + "  <input type=\"submit\" name=\"verb\" value=\"ListSets\"> "
-      + "  <input type=\"submit\" name=\"verb\" value=\"ListMetadataFormats\"> "
-      + "  <input type=\"submit\" name=\"verb\" value=\"ListRecords\"><br><br>"
-      +   (requestUri.length() > 0 ?
-          "  <label>Request URI:</label>  <b>" + requestUri
+      +           (inputOaiUrl != null ? inputOaiUrl : "") + "\">&nbsp;"
+      + "  <input type=\"submit\" name=\"action\" value=\"Request\"> "
+      +   (finalRequestUrl.length() > 0 ?
+            "  <input type=\"submit\" name=\"action\" value=\"Clear\">"
+          + "  <br><br>"
+          + "  <input type=\"submit\" name=\"verb\" value=\"Identify\"> "
+          + "  <input type=\"submit\" name=\"verb\" value=\"ListSets\"> "
+          + "  <input type=\"submit\" name=\"verb\" value=\"ListMetadataFormats\"> "
+          + "  <input type=\"submit\" name=\"verb\" value=\"ListRecords\">"
+          + "  <br><br>"
+          + "  <label>Request URL:</label>  <b>" + finalRequestUrl
           + "</b><br><br>"
           + "<textarea rows=\"40\" cols=\"140\" name=\"results\" >"
-          + response
+          + oaiResponse
           + "</textarea>"
           :
           "")
@@ -179,12 +190,6 @@ public class BrowseArchive extends AbstractVerticle {
         + (resp != null ? firstCharactersOf(resp, 2000) : " No response created.");
     }
     return prettyOaiXmlOrDump;
-  }
-
-  private String setProtocolToHttp (String url) {
-    return (
-      url != null && !url.isEmpty() && !url.matches("https?://.*")) ?
-      "http://" + url : url;
   }
 
   private String firstCharactersOf(String str, int chars) {
