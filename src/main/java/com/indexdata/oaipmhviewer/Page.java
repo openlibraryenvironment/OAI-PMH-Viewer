@@ -32,18 +32,19 @@ public class Page {
    * @param listMetadataFormats available metadata formats from the OAI-PMH service
    * @param selectedFormat the currently selected format
    * @param displayResponse the response on finalRequestUrl
+   * @param gotOai flags if OAI-PMH data was retrieved
    * @return HTML page to send to the client
-   */  
+   */
   public static String getHtml(
-              String inputOaiUrl, 
-              String finalOaiUrl, 
-              String listSets, 
-              String selectedSet, 
-              String listMetadataFormats, 
-              String selectedFormat, 
-              String displayResponse, 
+              String inputOaiUrl,
+              String finalOaiUrl,
+              String listSets,
+              String selectedSet,
+              String listMetadataFormats,
+              String selectedFormat,
+              String displayResponse,
               boolean gotOai) {
-    
+
     StringBuilder page = new StringBuilder("");
 
     page.append("<head><title>OAI-PMH viewer</title></head>").append(LS)
@@ -55,12 +56,30 @@ public class Page {
         .append("     name=\"oaiurl\" value=\"")
         .append((inputOaiUrl != null ? inputOaiUrl : "")).append("\">&nbsp;")
         .append("  <input type=\"submit\" name=\"action\" value=\"Request\"> ")
-        .append("<input type=\"submit\" name=\"action\" value=\"Clear\"><br>").append(LS)
-        .append("<i>Can be a base OAI-PMH URL as well as a complete OAI-PMH query</i><br>");
+        .append("<input type=\"submit\" name=\"action\" value=\"Clear\"><br>").append(LS);
+
+    if (!gotOai) {
+        page.append("<br>The URL can be a base OAI-PMH URL or a complete OAI-PMH query.")
+            .append("<br><br>").append(LS)
+            .append("A base OAI-PMH URL could look like this: ")
+            .append("<br><br>&nbsp;&nbsp;<b>http://my.oaipmhserver.com/view/oai/MY_INST_CODE/request</b> ")
+            .append("<br><br>").append(LS)
+            .append("A complete query for that same base URL could be: ")
+            .append("<br><br>&nbsp;&nbsp;<b>http://my.oaipmhserver.com/view/oai/MY_INST_CODE/request?verb=ListRecords&set=myset&metadataPrefix=marc21</b>")
+            .append("<br><br>").append(LS)
+            .append("In either case, once this service has recognized a genuine ")
+            .append("base OAI-PMH URL, it will offer options for runnning various, ")
+            .append("simple OAI-PMH requests against that remote service address.")
+            .append("<br><br>").append(LS)
+            .append("At any time, an arbitrary OAI-PMH request can be made by ")
+            .append("entering the request URL in the input field above and hitting ")
+            .append(" Return or clicking 'Request'<br>");
+
+    }
 
     if (finalOaiUrl.length() > 0 && gotOai) {
-      page.append("<br><br>").append(LS)
-          .append("<h3>Modify the request</h3>").append(LS)
+      page.append("<br>").append(LS)
+          .append("<h3>Other requests</h3>").append(LS)
           .append("<input type=\"submit\" name=\"verb\" value=\"Identify\"> ")
           .append("<input type=\"submit\" name=\"verb\" value=\"ListSets\"> ")
           .append("<input type=\"submit\" name=\"verb\" value=\"ListMetadataFormats\"> ")
@@ -71,8 +90,8 @@ public class Page {
           .append("<br><br>").append(LS);
     }
     if (finalOaiUrl.length() >0 ) {
-      page.append("<label><h3>Latest request sent</h3></label>").append(finalOaiUrl)
-          .append("</b><br><br>").append(LS)
+      page.append("<h3>Latest request sent</h3>").append(finalOaiUrl)
+          .append("<br><br>").append(LS)
           .append("<h3>Latest response received</h3>").append(LS)
           .append("<textarea rows=\"40\" cols=\"140\" name=\"results\" >")
           .append(displayResponse).append("</textarea>").append(LS);
@@ -92,13 +111,13 @@ public class Page {
    * @return HTML page to send to the client
    */
   public static String getHtml(
-              String inputOaiUrl, 
-              String finalOaiUrl, 
-              String message, 
+              String inputOaiUrl,
+              String finalOaiUrl,
+              String message,
               boolean gotOai) {
     return getHtml(inputOaiUrl, finalOaiUrl, "", "", "", "", message, gotOai);
   }
-  
+
     /**
    * Creates HTML select tag from OAI-PMH ListSets request
    * @param metadataFormats OAI-PMH XML containing available sets
