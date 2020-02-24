@@ -17,7 +17,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import io.vertx.core.AbstractVerticle;
@@ -102,7 +101,14 @@ public class BrowseArchive extends AbstractVerticle {
                     CompositeFuture.all(promisedSets, promisedFormats).onComplete( cfar -> {
                       String listSets = cfar.result().resultAt(0).toString();
                       String listMetadataFormats = cfar.result().resultAt(1).toString();
-                      String page = buildPage(inputOaiUrl, finalOaiUrl, listSets, set, listMetadataFormats, metadataPrefix, displayOaiResponse, true);
+                      String page = Page.get(inputOaiUrl,
+                                             finalOaiUrl,
+                                             listSets,
+                                             set,
+                                             listMetadataFormats,
+                                             metadataPrefix,
+                                             displayOaiResponse,
+                                             true);
                       resp.end(page);
                     });
                   } catch (NotOaiPmhResponseException nopre) {
@@ -147,7 +153,7 @@ public class BrowseArchive extends AbstractVerticle {
         }
       } else {
         // No OAI URL provided yet, return empty form
-        resp.end(buildPage("", "", "", false));
+        resp.end(Page.get("", "", "", false));
       }
     });
 
@@ -170,7 +176,7 @@ public class BrowseArchive extends AbstractVerticle {
    * @param message the error message to return
    */
   private void sendErrorResponse(HttpServerResponse resp, String inputOaiUrl, String finalOaiUrl, String message) {
-    resp.end(buildPage(inputOaiUrl, finalOaiUrl, message, false));
+    resp.end(Page.get(inputOaiUrl, finalOaiUrl, message, false));
   }
 
   /**
@@ -221,137 +227,6 @@ public class BrowseArchive extends AbstractVerticle {
       }
     });
     return promise.future();
-  }
-
-  /**
-   * Builds minimal page - ie before any URL is entered or in error scenarios
-   * @param inputOaiUrl the initial user provided URL, if any
-   * @param finalRequestUrl the actually executed URL, if any
-   * @param response the response to the executed URL
-   * @return HTML page to send to the client
-   */
-  private String buildPage (String inputOaiUrl, String finalRequestUrl, String response, boolean hasOai) {
-    return buildPage(inputOaiUrl, finalRequestUrl, "", "", "", "", response, hasOai);
-  }
-
-  /**
-   * Builds the page with the form
-   * @param inputOaiUrl the initial user provided URL
-   * @param finalRequestUrl the actually executed URL
-   * @param sets available sets from the OAI-PMH service
-   * @param selectedSet the currently selected set
-   * @param formats available metadata formats from the OAI-PMH service
-   * @param selectedFormat the currently selected format
-   * @param oaiResponse the response on finalRequestUrl
-   * @return HTML page to send to the client
-   */
-  private String buildPage (String inputOaiUrl, String finalRequestUrl,
-          String sets, String selectedSet, String formats, String selectedFormat,
-          String oaiResponse,
-          boolean hasOai) {
-
-    StringBuilder page = new StringBuilder("");
-
-    page.append("<head><title>OAI-PMH viewer</title></head>").append(LS)
-        .append("<body>").append(LS)
-        .append(" <H1>Check an OAI-PMH service</H1>").append(LS)
-        .append(" <form id=\"request\" method=\"post\" >").append(LS)
-        .append("  <label for=\"url\"><h3>Enter an OAI-PMH URL</h3>")
-        .append("<input type=\"text\" size=\"120\" id=\"oaiurl\" ")
-        .append("     name=\"oaiurl\" value=\"")
-        .append((inputOaiUrl != null ? inputOaiUrl : "")).append("\">&nbsp;")
-        .append("  <input type=\"submit\" name=\"action\" value=\"Request\"> ")
-        .append("<input type=\"submit\" name=\"action\" value=\"Clear\"><br>").append(LS)
-        .append("<i>Can be a base OAI-PMH URL as well as a complete OAI-PMH query</i><br>");
-
-    if (finalRequestUrl.length() > 0 && hasOai) {
-      page.append("<br><br>").append(LS)
-          .append("<h3>Modify the request</h3>").append(LS)
-          .append("<input type=\"submit\" name=\"verb\" value=\"Identify\"> ")
-          .append("<input type=\"submit\" name=\"verb\" value=\"ListSets\"> ")
-          .append("<input type=\"submit\" name=\"verb\" value=\"ListMetadataFormats\"> ")
-          .append("<br><br>").append(LS)
-          .append(setsSelectList(sets, selectedSet)).append("&nbsp;")
-          .append(metadataPrefixSelectList(formats, selectedFormat)).append("&nbsp;")
-          .append("<input type=\"submit\" name=\"verb\" value=\"ListRecords\">").append(LS)
-          .append("<br><br>").append(LS);
-    }
-    if (finalRequestUrl.length() >0 ) {
-      page.append("<label><h3>Latest request sent</h3></label>").append(finalRequestUrl)
-          .append("</b><br><br>").append(LS)
-          .append("<h3>Latest response received</h3>").append(LS)
-          .append("<textarea rows=\"40\" cols=\"140\" name=\"results\" >")
-          .append(oaiResponse).append("</textarea>").append(LS);
-    }
-
-    page.append( " </form>").append(LS).append("</body>");
-
-    return page.toString();
-  }
-
-  /**
-   * Creates HTML select tag from OAI-PMH ListSets request
-   * @param metadataFormats OAI-PMH XML containing available sets
-   * @param selected defines the currently selected set
-   * @return HTML select list
-   */
-  private String setsSelectList (String sets, String selected) {
-    StringBuilder selectList = new StringBuilder("");
-    try {
-      Element node =  DocumentBuilderFactory
-        .newInstance()
-        .newDocumentBuilder()
-        .parse(new ByteArrayInputStream(sets.getBytes()))
-        .getDocumentElement();
-      NodeList setElements = node.getElementsByTagName("setSpec");
-      selectList.append("<select id=\"set\" name=\"set\">" +LS);
-      selectList.append("<option value=\"\">Select set</option>");
-      for (int i=0; i<setElements.getLength(); i++) {
-        String value = setElements.item(i).getTextContent();
-        selectList.append("<option value=\"").append(value).append("\"")
-                  .append(value.equals(selected) ? " selected " : "")
-                  .append(">");
-        selectList.append(value).append("</option>").append(LS);
-      }
-      selectList.append("</select>").append(LS);
-      return selectList.toString();
-    } catch (IOException | ParserConfigurationException | SAXException e) {
-      System.out.println("Error creating DOM for ListSets XML: " + e.getMessage());
-      return "<select id=\"set\"></select>";
-    }
-  }
-
-  /**
-   * Creates HTML select tag from OAI-PMH ListMetadataFormats request
-   * @param metadataFormats OAI-PMH XML containing available meta-data formats
-   * @param selected defines the currently selected format
-   * @return HTML select list
-   */
-  private String metadataPrefixSelectList (String metadataFormats, String selected) {
-    StringBuilder selectList = new StringBuilder("");
-    try {
-      Element node =  DocumentBuilderFactory
-        .newInstance()
-        .newDocumentBuilder()
-        .parse(new ByteArrayInputStream(metadataFormats.getBytes()))
-        .getDocumentElement();
-      NodeList setElements = node.getElementsByTagName("metadataPrefix");
-      selectList.append("<select id=\"metadataPrefix\" name=\"metadataPrefix\">" +LS);
-      selectList.append("<option value=\"\">Select metadataPrefix</option>");
-      for (int i=0; i<setElements.getLength(); i++) {
-        String value = setElements.item(i).getTextContent();
-        selectList.append("<option value=\"").append(value).append("\"")
-                  .append(value.equals(selected) ? " selected " : "")
-                  .append(">");
-        selectList.append(value).append("</option>").append(LS);
-      }
-      selectList.append("</select>").append(LS);
-      return selectList.toString();
-    } catch (IOException | ParserConfigurationException | SAXException e) {
-      System.out.println("Error creating DOM for ListMetadataFormats XML: " + e.getMessage());
-      return "<select id=\"metadataPrefix\"></select>";
-    }
-
   }
 
   /**
