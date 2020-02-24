@@ -59,21 +59,24 @@ public class Page {
         .append("<input type=\"submit\" name=\"action\" value=\"Clear\"><br>").append(LS);
 
     if (!gotOai) {
-        page.append("<br>The URL can be a base OAI-PMH URL or a complete OAI-PMH query.")
-            .append("<br><br>").append(LS)
-            .append("A base OAI-PMH URL could look like this: ")
-            .append("<br><br>&nbsp;&nbsp;<b>http://my.oaipmhserver.com/view/oai/MY_INST_CODE/request</b> ")
-            .append("<br><br>").append(LS)
-            .append("A complete query for that same base URL could be: ")
-            .append("<br><br>&nbsp;&nbsp;<b>http://my.oaipmhserver.com/view/oai/MY_INST_CODE/request?verb=ListRecords&set=myset&metadataPrefix=marc21</b>")
-            .append("<br><br>").append(LS)
-            .append("In either case, once this service has recognized a genuine ")
+        page.append("<table border=\"0\" cellpadding=\"10\" width=\"80%\">")
+            .append("<tr><td>The URL can be a base OAI-PMH URL or a complete OAI-PMH query.</td></tr>")
+            .append(LS)
+            .append("<tr><td>A base OAI-PMH URL could look like this: </td></tr>")
+            .append(LS)
+            .append("<tr><td>&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request</b></td></tr>")
+            .append(LS)
+            .append("<tr><td>A complete query for that same base URL could be: </td></tr>")
+            .append("<tr><td>&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request?verb=ListRecords&set=myset&metadataPrefix=marc21</b></td></tr>")
+            .append(LS)
+            .append("<tr><td>In either case, once this service has recognized a genuine ")
             .append("base OAI-PMH URL, it will offer options for runnning various, ")
             .append("simple OAI-PMH requests against that remote service address.")
-            .append("<br><br>").append(LS)
-            .append("At any time, an arbitrary OAI-PMH request can be made by ")
+            .append("</td></tr>").append(LS)
+            .append("<tr><td>At any time, an arbitrary OAI-PMH request can be made by ")
             .append("entering the request URL in the input field above and hitting ")
-            .append(" Return or clicking 'Request'<br>");
+            .append(" Return or clicking 'Request'</td></tr>").append(LS)
+            .append("</table>").append(LS);
 
     }
 
