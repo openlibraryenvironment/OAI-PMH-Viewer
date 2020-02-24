@@ -79,7 +79,7 @@ public class BrowseArchive extends AbstractVerticle {
           } else if (pURL.getQuery() != null) {
             query = pURL.getQuery();
           } else {
-            query = "verb=Identify";
+            query = "";
           }
 
           final String finalOaiUrl =
