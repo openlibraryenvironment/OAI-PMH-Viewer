@@ -20,3 +20,7 @@ The service listens on port 8088 by default. To change the service port to, say,
 
 `java -Dhttp.port=8000 -jar [path-to-jar-file/]OAI-PMH-Viewer-{version}-fat.jar`
 
+## Running with Docker
+To build the container run `docker build --build-arg VERSION="{version}" -t oai-pmh-viewer .`
+
+To run use `docker run -p8088:8088 oai-pmh-viewer`. Pass options to java if desired using the JAVA_OPTIONS environment variable. For example, `docker run -e JAVA_OPTIONS="-Dhttp.port=8000" -p8000:8000 oai-pmh-viwer`
