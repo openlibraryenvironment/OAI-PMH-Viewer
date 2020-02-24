@@ -13,10 +13,17 @@ import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
-import org.w3c.dom.Element;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import io.vertx.core.AbstractVerticle;
@@ -240,20 +247,34 @@ public class BrowseArchive extends AbstractVerticle {
     if (resp != null && resp.contains("<OAI-PMH"))
     {
       try {
+
+        //initialize StreamResult with File object to save to file
+        StreamResult result = new StreamResult(new StringWriter());
+        Document doc = DocumentBuilderFactory
+          .newInstance()
+          .newDocumentBuilder()
+          .parse(new ByteArrayInputStream(resp.getBytes()));
+
+        // First remove existing whitespace between elements
+        // (or it's preserved, messing up the indentation)
+        XPathFactory xfact = XPathFactory.newInstance();
+        XPath xpath = xfact.newXPath();
+        NodeList empty =
+          (NodeList)xpath.evaluate("//text()[normalize-space(.) = '']",
+                             doc, XPathConstants.NODESET);
+        for (int i = 0; i < empty.getLength(); i++) {
+          Node node = empty.item(i);
+          node.getParentNode().removeChild(node);
+        }
+
+        // Then transform the XML with indentation
+        DOMSource source = new DOMSource(doc.getDocumentElement());
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-        //initialize StreamResult with File object to save to file
-        StreamResult result = new StreamResult(new StringWriter());
-        Element node =  DocumentBuilderFactory
-          .newInstance()
-          .newDocumentBuilder()
-          .parse(new ByteArrayInputStream(resp.getBytes()))
-          .getDocumentElement();
-        DOMSource source = new DOMSource(node);
         transformer.transform(source, result);
         prettyOaiXml = result.getWriter().toString();
-      } catch (IOException | IllegalArgumentException | ParserConfigurationException | TransformerException | SAXException e) {
+      } catch (IOException | IllegalArgumentException | ParserConfigurationException | TransformerException | SAXException | TransformerFactoryConfigurationError | XPathExpressionException e) {
         String message = "Could not parse/transform response: " + e.getMessage() + LS + LS + resp;
         throw new NotOaiPmhResponseException(message);
       }
