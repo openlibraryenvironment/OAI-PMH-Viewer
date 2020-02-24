@@ -101,14 +101,14 @@ public class BrowseArchive extends AbstractVerticle {
                     CompositeFuture.all(promisedSets, promisedFormats).onComplete( cfar -> {
                       String listSets = cfar.result().resultAt(0).toString();
                       String listMetadataFormats = cfar.result().resultAt(1).toString();
-                      String page = Page.get(inputOaiUrl,
-                                             finalOaiUrl,
-                                             listSets,
-                                             set,
-                                             listMetadataFormats,
-                                             metadataPrefix,
-                                             displayOaiResponse,
-                                             true);
+                      String page = Page.getHtml(inputOaiUrl,
+                                                 finalOaiUrl,
+                                                 listSets,
+                                                 set,
+                                                 listMetadataFormats,
+                                                 metadataPrefix,
+                                                 displayOaiResponse,
+                                                 true);
                       resp.end(page);
                     });
                   } catch (NotOaiPmhResponseException nopre) {
@@ -153,7 +153,7 @@ public class BrowseArchive extends AbstractVerticle {
         }
       } else {
         // No OAI URL provided yet, return empty form
-        resp.end(Page.get("", "", "", false));
+        resp.end(Page.getHtml("", "", "", false));
       }
     });
 
@@ -176,13 +176,13 @@ public class BrowseArchive extends AbstractVerticle {
    * @param message the error message to return
    */
   private void sendErrorResponse(HttpServerResponse resp, String inputOaiUrl, String finalOaiUrl, String message) {
-    resp.end(Page.get(inputOaiUrl, finalOaiUrl, message, false));
+    resp.end(Page.getHtml(inputOaiUrl, finalOaiUrl, message, false));
   }
 
   /**
    * Makes OAI-PMH request to remote service for available sets
    * @param url base URL of the remote OAI-PMH service
-   * @return a future from which to get the servers response
+   * @return a future from which to getHtml the servers response
    */
   private Future<String> listSets(URL url) {
     Promise<String> promise = Promise.promise();
@@ -207,7 +207,7 @@ public class BrowseArchive extends AbstractVerticle {
   /**
    * Makes OAI-PMH request to remote service for available metadata prefixes
    * @param url base URL of the remote OAI-PMH service
-   * @return a future from which to get the servers response
+   * @return a future from which to getHtml the servers response
    */
   private Future<String> listMetadataFormats(URL url) {
     Promise<String> promise = Promise.promise();

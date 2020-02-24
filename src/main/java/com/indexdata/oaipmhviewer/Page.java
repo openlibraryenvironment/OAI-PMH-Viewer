@@ -34,7 +34,7 @@ public class Page {
    * @param displayResponse the response on finalRequestUrl
    * @return HTML page to send to the client
    */  
-  public static String get(
+  public static String getHtml(
               String inputOaiUrl, 
               String finalOaiUrl, 
               String listSets, 
@@ -91,12 +91,12 @@ public class Page {
    * @param gotOai flags if a valid OAI-PMH response was received
    * @return HTML page to send to the client
    */
-  public static String get(
+  public static String getHtml(
               String inputOaiUrl, 
               String finalOaiUrl, 
               String message, 
               boolean gotOai) {
-    return get(inputOaiUrl, finalOaiUrl, "", "", "", "", message, gotOai);
+    return getHtml(inputOaiUrl, finalOaiUrl, "", "", "", "", message, gotOai);
   }
   
     /**
