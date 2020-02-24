@@ -49,40 +49,39 @@ public class Page {
 
     page.append("<head><title>OAI-PMH viewer</title></head>").append(LS)
         .append("<body>").append(LS)
-        .append(" <H1>Check an OAI-PMH service</H1>").append(LS)
+        .append(" <H1>OAI-PMH check</H1>").append(LS)
         .append(" <form id=\"request\" method=\"post\" >").append(LS)
-        .append("  <label for=\"url\"><h3>Enter an OAI-PMH URL</h3>")
-        .append("<input type=\"text\" size=\"120\" id=\"oaiurl\" ")
+        .append("OAI-PMH URL: <input type=\"text\" size=\"110\" id=\"oaiurl\" ")
         .append("     name=\"oaiurl\" value=\"")
         .append((inputOaiUrl != null ? inputOaiUrl : "")).append("\">&nbsp;")
         .append("  <input type=\"submit\" name=\"action\" value=\"Request\"> ")
         .append("<input type=\"submit\" name=\"action\" value=\"Clear\"><br>").append(LS);
 
     if (!gotOai) {
-        page.append("<table border=\"0\" cellpadding=\"10\" width=\"80%\">")
-            .append("<tr><td>The URL can be a base OAI-PMH URL or a complete OAI-PMH query.</td></tr>")
+        page.append("<br><br><table border=\"0\" cellpadding=\"10\" width=\"80%\">")
+            .append("<tr><td>The URL can be an OAI-PMH base URL or a complete OAI-PMH query.</td></tr>")
             .append(LS)
-            .append("<tr><td>A base OAI-PMH URL could look like this: </td></tr>")
+            .append("<tr><td>A base URL could look like this: </td></tr>")
             .append(LS)
             .append("<tr><td>&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request</b></td></tr>")
             .append(LS)
             .append("<tr><td>A complete query for that same base URL could be: </td></tr>")
             .append("<tr><td>&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request?verb=ListRecords&set=myset&metadataPrefix=marc21</b></td></tr>")
             .append(LS)
-            .append("<tr><td>In either case, once this service has recognized a genuine ")
-            .append("base OAI-PMH URL, it will offer options for runnning various, ")
-            .append("simple OAI-PMH requests against that remote service address.")
+            .append("<tr><td>In either case, once this service has recognized the URL as ")
+            .append("pointing to an OAI-PMH end-point, it will offer some options for runnning ")
+            .append("various simple requests against that server.")
             .append("</td></tr>").append(LS)
             .append("<tr><td>At any time, an arbitrary OAI-PMH request can be made by ")
-            .append("entering the request URL in the input field above and hitting ")
-            .append(" Return or clicking 'Request'</td></tr>").append(LS)
+            .append("typing or pasting a complete request URL into the input field above and hitting ")
+            .append(" Enter or clicking 'Request'</td></tr>").append(LS)
             .append("</table>").append(LS);
 
     }
 
     if (finalOaiUrl.length() > 0 && gotOai) {
       page.append("<br>").append(LS)
-          .append("<h3>Other requests</h3>").append(LS)
+          .append("<h3>Request options</h3>").append(LS)
           .append("<input type=\"submit\" name=\"verb\" value=\"Identify\"> ")
           .append("<input type=\"submit\" name=\"verb\" value=\"ListSets\"> ")
           .append("<input type=\"submit\" name=\"verb\" value=\"ListMetadataFormats\"> ")
