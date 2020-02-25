@@ -237,10 +237,10 @@ public class BrowseArchive extends AbstractVerticle {
   }
 
   /**
-   * Will parse provided string as OAI-PMH XML
+   * Will parse provided string as OAI-PMH XML, remove existing white space and re-indent
    * @param resp a String containing the OAI-PMH XML to format
    * @return Indented OAI-PMH XML for display
-   * @throws NotOaiPmhResponseException if resp is not recognized as OAI-PMH XML
+   * @throws NotOaiPmhResponseException if 'resp' is not recognized as OAI-PMH XML
    */
   private String prettyPrintOaiResponse (String resp) throws NotOaiPmhResponseException {
     String prettyOaiXml;
@@ -248,8 +248,10 @@ public class BrowseArchive extends AbstractVerticle {
     {
       try {
 
-        //initialize StreamResult with File object to save to file
+        // StreamResult to hold the transformed document
         StreamResult result = new StreamResult(new StringWriter());
+
+        // Build DOM document
         Document doc = DocumentBuilderFactory
           .newInstance()
           .newDocumentBuilder()
@@ -273,7 +275,10 @@ public class BrowseArchive extends AbstractVerticle {
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
         transformer.transform(source, result);
+
+        // Return result of transformation as string
         prettyOaiXml = result.getWriter().toString();
+
       } catch (IOException | IllegalArgumentException | ParserConfigurationException | TransformerException | SAXException | TransformerFactoryConfigurationError | XPathExpressionException e) {
         String message = "Could not parse/transform response: " + e.getMessage() + LS + LS + resp;
         throw new NotOaiPmhResponseException(message);
@@ -286,10 +291,10 @@ public class BrowseArchive extends AbstractVerticle {
   }
 
   /**
-   * Return a chunk of the input str for partial dump of it
+   * Return a chunk of the input 'str' for partial dump of it
    * @param str input string to cut off
    * @param chars maximum length of the dump
-   * @return chars characters of str
+   * @return chars characters of 'str'
    */
   private String firstCharactersOf(String str, int chars) {
     if (str != null) {
