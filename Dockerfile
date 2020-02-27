@@ -1,6 +1,6 @@
 FROM openjdk:8-jre-alpine
 
-ARG VERSION=1.0.0-SNAPSHOT
+ARG VERSION=1.1.1-SNAPSHOT
 
 COPY entrypoint.sh /entrypoint.sh
 COPY target/OAI-PMH-Viewer-${VERSION}-fat.jar /oai-viewer.jar
