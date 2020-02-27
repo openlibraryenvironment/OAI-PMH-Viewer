@@ -9,10 +9,10 @@ package com.indexdata.oaipmhviewer;
  *
  * @author ne
  */
-public class NotOaiPmhResponseException extends Exception {
+public class NotAnOaiPmhResponseException extends Exception {
   String message = "";
   
-  NotOaiPmhResponseException(String message) {
+  NotAnOaiPmhResponseException(String message) {
     this.message = message;
   }
   

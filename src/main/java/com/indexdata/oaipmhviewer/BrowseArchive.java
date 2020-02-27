@@ -122,7 +122,7 @@ public class BrowseArchive extends AbstractVerticle {
                                                  true);
                       resp.end(page);
                     });
-                  } catch (NotOaiPmhResponseException nopre) {
+                  } catch (NotAnOaiPmhResponseException nopre) {
                     sendErrorResponse(
                             resp,
                             inputOaiUrl,
@@ -244,9 +244,9 @@ public class BrowseArchive extends AbstractVerticle {
    * Will parse provided string as OAI-PMH XML, remove existing white space and re-indent
    * @param resp a String containing the OAI-PMH XML to format
    * @return Indented OAI-PMH XML for display
-   * @throws NotOaiPmhResponseException if 'resp' is not recognized as OAI-PMH XML
+   * @throws NotAnOaiPmhResponseException if 'resp' is not recognized as OAI-PMH XML
    */
-  private String prettyPrintOaiResponse (String resp) throws NotOaiPmhResponseException {
+  private String prettyPrintOaiResponse (String resp) throws NotAnOaiPmhResponseException {
     String prettyOaiXml;
     if (resp != null && resp.contains("<OAI-PMH"))
     {
@@ -285,11 +285,11 @@ public class BrowseArchive extends AbstractVerticle {
 
       } catch (IOException | IllegalArgumentException | ParserConfigurationException | TransformerException | SAXException | TransformerFactoryConfigurationError | XPathExpressionException e) {
         String message = "Could not parse/transform response: " + e.getMessage() + LS + LS + resp;
-        throw new NotOaiPmhResponseException(message);
+        throw new NotAnOaiPmhResponseException(message);
       }
     } else {
       String message = resp != null ? firstCharactersOf(resp, 2000) : " No response created.";
-      throw new NotOaiPmhResponseException(message);
+      throw new NotAnOaiPmhResponseException(message);
     }
     return prettyOaiXml;
   }

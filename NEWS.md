@@ -1,4 +1,4 @@
-## 1.1.1
+## 1.1.0
 
  * Move help text to pop-up
  * Make input field, text area take up (almost) entire width
