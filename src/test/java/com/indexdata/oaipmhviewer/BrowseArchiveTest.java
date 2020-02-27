@@ -25,10 +25,12 @@ import io.vertx.ext.web.client.WebClient;
 @RunWith(VertxUnitRunner.class)
 public class BrowseArchiveTest {
   private Vertx vertx;
+  private static final String testPort = "8087";
   
   @Before
   public void setUp(TestContext context) {
     vertx = Vertx.vertx();
+    System.setProperty("http.port", testPort);
     vertx.deployVerticle(BrowseArchive.class.getName(), context.asyncAssertSuccess());
   }
   
@@ -41,8 +43,8 @@ public class BrowseArchiveTest {
   public void testMyApplication(TestContext context) {
     final Async async = context.async();
     WebClient client = WebClient.create(vertx);
-    
-    client.get(8088, "localhost", "/")
+    int port = Integer.parseInt(testPort);
+    client.get(port, "localhost", "/")
             .send(ar -> {
               if (ar.succeeded()) {
                 HttpResponse<Buffer> response = ar.result();
