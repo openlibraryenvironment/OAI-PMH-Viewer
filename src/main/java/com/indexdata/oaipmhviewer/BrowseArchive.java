@@ -38,6 +38,8 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.FaviconHandler;
+import io.vertx.ext.web.handler.StaticHandler;
 
 /**
  *
@@ -57,8 +59,10 @@ public class BrowseArchive extends AbstractVerticle {
     // Handle POSTed FORM data
     router.route().handler(BodyHandler.create());
 
-    client = WebClient.create(vertx);
+    router.route().handler(FaviconHandler.create());
+    router.route("/static/*").handler(StaticHandler.create("static"));
 
+    client = WebClient.create(vertx);
     router.route().handler(routingContext -> {
       HttpServerRequest req = routingContext.request();
       HttpServerResponse resp = routingContext.response();

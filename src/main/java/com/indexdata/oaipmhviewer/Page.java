@@ -47,41 +47,26 @@ public class Page {
 
     StringBuilder page = new StringBuilder("");
 
-    page.append("<head><title>OAI-PMH viewer</title></head>").append(LS)
-        .append("<body>").append(LS)
-        .append(" <H1>OAI-PMH check</H1>").append(LS)
+    page.append("<head><title>OAI-PMH checker</title></head>").append(LS)
+        .append("<body style=\"font: normal 100%/100% Verdana, Arial, sans-serif;\" >").append(LS)
+        .append(" <div>").append(LS)
+        .append("<br>")
+        .append(" <H1>OAI-PMH checker</H1>").append(LS)
+        .append("<br>")
         .append(" <form id=\"request\" method=\"post\" >").append(LS)
-        .append("OAI-PMH URL: <input type=\"text\" size=\"110\" id=\"oaiurl\" ")
+        .append("OAI-PMH URL&nbsp;&nbsp;")
+        .append("<a title=\"hints\" href=\"\" ")
+        .append(" onclick=\"window.open('Hints', 'Hints', 'status=0,scrollbars=1,height=330,width=970').document.write('")
+        .append(helpPage())
+        .append("'); return false;\"><img alt=\"?\" src=\"static/images/help.png\" /></a>").append(LS)
+        .append("<input type=\"text\" style=\"width:80%;\" id=\"oaiurl\" ")
         .append("     name=\"oaiurl\" value=\"")
         .append((inputOaiUrl != null ? inputOaiUrl : "")).append("\">&nbsp;")
         .append("  <input type=\"submit\" name=\"action\" value=\"Request\"> ")
         .append("<input type=\"submit\" name=\"action\" value=\"Clear\"><br>").append(LS);
 
-    if (!gotOai) {
-        page.append("<br><br><table border=\"0\" cellpadding=\"10\" width=\"80%\">")
-            .append("<tr><td>The URL can be an OAI-PMH base URL or a complete OAI-PMH query.</td></tr>")
-            .append(LS)
-            .append("<tr><td>A base URL could look like this: </td></tr>")
-            .append(LS)
-            .append("<tr><td>&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request</b></td></tr>")
-            .append(LS)
-            .append("<tr><td>A complete query for that same base URL could be: </td></tr>")
-            .append("<tr><td>&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request?verb=ListRecords&set=myset&metadataPrefix=marc21</b></td></tr>")
-            .append(LS)
-            .append("<tr><td>In either case, once this service has recognized the URL as ")
-            .append("pointing to an OAI-PMH end-point, it will offer some options for runnning ")
-            .append("various simple requests against that server.")
-            .append("</td></tr>").append(LS)
-            .append("<tr><td>At any time, an arbitrary OAI-PMH request can be made by ")
-            .append("typing or pasting a complete request URL into the input field above and hitting ")
-            .append(" Enter or clicking 'Request'</td></tr>").append(LS)
-            .append("</table>").append(LS);
-
-    }
-
     if (finalOaiUrl.length() > 0 && gotOai) {
-      page.append("<br>").append(LS)
-          .append("<h3>Request options</h3>").append(LS)
+      page.append("<h3>Request options</h3>").append(LS)
           .append("<input type=\"submit\" name=\"verb\" value=\"Identify\"> ")
           .append("<input type=\"submit\" name=\"verb\" value=\"ListSets\"> ")
           .append("<input type=\"submit\" name=\"verb\" value=\"ListMetadataFormats\"> ")
@@ -93,13 +78,13 @@ public class Page {
     }
     if (finalOaiUrl.length() >0 ) {
       page.append("<h3>Latest request sent</h3>").append(finalOaiUrl)
-          .append("<br><br>").append(LS)
+          .append("<br>").append(LS)
           .append("<h3>Latest response received</h3>").append(LS)
-          .append("<textarea rows=\"40\" cols=\"140\" name=\"results\" >")
+          .append("<textarea rows=\"30\" style=\"width:98%;\" name=\"results\" >")
           .append(displayResponse).append("</textarea>").append(LS);
     }
 
-    page.append( " </form>").append(LS).append("</body>");
+    page.append( " </form>").append(LS).append("</div>").append(LS).append("</body>");
     return page.toString();
   }
 
@@ -182,7 +167,38 @@ public class Page {
       System.out.println("Error creating DOM for ListMetadataFormats XML: " + e.getMessage());
       return "<select id=\"metadataPrefix\"></select>";
     }
+  }
 
+  /**
+   * Displays hints for getting started
+   * @return Help page as a string
+   */
+  private static String helpPage () {
+    StringBuilder text = new StringBuilder("");
+    text.append("<html><head><title>Hints</title></head>")
+        .append("<body style=\\'font: normal 100%/100% Verdana, Arial, sans-serif;\\'>")
+        .append("<h3>Hints</h3>")
+        .append("Enter the URL of an OAI-PMH service you would like to test. The URL can be an OAI-PMH base URL or a complete OAI-PMH query.")
+        .append("<br><br>")
+        .append("A base URL could look like this:")
+        .append("<br><br>")
+        .append("&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request</b>")
+        .append("<br><br>")
+        .append("A complete query for that same base URL could be:")
+        .append("<br><br>")
+        .append("&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request?verb=ListRecords&set=myset&metadataPrefix=marc21</b>")
+        .append("<br><br>In either case, once this service has recognized the URL as ")
+        .append("pointing to an OAI-PMH end-point, it will offer some options for runnning ")
+        .append("various simple requests against that server.")
+        .append("<br><br>")
+        .append("At any time, an arbitrary OAI-PMH request can be made by ")
+        .append("typing or pasting a complete request URL into the input field and clicking \\'Request\\' or hitting Enter ")
+        .append("<br><br>")
+        .append("<div align=\\'center\\'><input type=\\'button\\' onclick=\\'self.close()\\' value=\\'OK\\'/></div>")
+        .append("</body>")
+        .append("</html>");
+
+    return text.toString();
   }
 
 }
