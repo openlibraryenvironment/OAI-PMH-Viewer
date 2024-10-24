@@ -3,7 +3,6 @@ package com.indexdata.oaipmhviewer;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 
@@ -21,6 +20,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import io.vertx.ext.web.client.WebClientOptions;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -37,6 +37,7 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.FaviconHandler;
 import io.vertx.ext.web.handler.StaticHandler;
@@ -47,7 +48,6 @@ import io.vertx.ext.web.handler.StaticHandler;
  */
 public class BrowseArchive extends AbstractVerticle {
   static String LS = System.lineSeparator();
-  WebClient client;
 
   @Override
   public void start(Promise<Void> promise) {
@@ -62,7 +62,6 @@ public class BrowseArchive extends AbstractVerticle {
     router.route().handler(FaviconHandler.create());
     router.route("/static/*").handler(StaticHandler.create("static"));
 
-    client = WebClient.create(vertx);
     router.route().handler(routingContext -> {
       HttpServerRequest req = routingContext.request();
       HttpServerResponse resp = routingContext.response();
@@ -76,11 +75,11 @@ public class BrowseArchive extends AbstractVerticle {
       if (inputOaiUrl != null && !inputOaiUrl.isEmpty() && !"Clear".equals(action)) {
         URL pURL;
         try {
-          // Allow user to enter URI without protocol. Always use http for now, anyway.
+          // Allow user to enter URI without protocol, but assume http then.
           pURL = (inputOaiUrl.matches("https?://.*") ?
                   new URL(inputOaiUrl) : new URL("http://"+inputOaiUrl));
 
-          String query = "";
+          String query;
           if (Arrays.asList("Identify",
                             "ListSets",
                             "ListMetadataFormats").contains(verb)) {
@@ -94,14 +93,13 @@ public class BrowseArchive extends AbstractVerticle {
           }
 
           final String finalOaiUrl =
-                  "http://"
+                  pURL.getProtocol() + "://"
                   + pURL.getAuthority()
                   + pURL.getPath()
                   + (query.isEmpty() ? "" : "?" + query);
 
           // Attempt OAI-PMH request
-          client.get(pURL.getAuthority(), pURL.getPath() + (query.isEmpty() ? "" : "?" + query))
-            .send(ar -> {
+          prepareRequest(pURL, query).send(ar -> {
               if (ar.succeeded()) {
                 HttpResponse<Buffer> oaiResponse = ar.result();
                 if (ar.result().statusCode() == 200) {
@@ -138,7 +136,7 @@ public class BrowseArchive extends AbstractVerticle {
                           "Error " + ar.result().statusCode()
                               + " " + ar.result().statusMessage()
                               + LS + LS
-                              + firstCharactersOf(oaiResponse.bodyAsString(),2000));
+                              + first2000CharactersOf(oaiResponse.bodyAsString()));
                 }
               } else {
                 sendErrorResponse(
@@ -148,13 +146,6 @@ public class BrowseArchive extends AbstractVerticle {
                         ar.cause().getMessage());
               }
             });
-        } catch (MalformedURLException mue) {
-          sendErrorResponse(
-                  resp,
-                  inputOaiUrl,
-                  "Couldn't create valid OAI request",
-                  mue.getMessage());
-
         } catch (Exception e) {
           sendErrorResponse(
                   resp,
@@ -197,7 +188,7 @@ public class BrowseArchive extends AbstractVerticle {
    */
   private Future<String> listSets(URL url) {
     Promise<String> promise = Promise.promise();
-    client.get(url.getAuthority(), url.getPath() + "?verb=ListSets").send(ar -> {
+    prepareRequest(url, "verb=ListSets").send(ar -> {
       String resp;
       if (ar.succeeded()) {
         HttpResponse<Buffer> oaiResponse = ar.result();
@@ -222,7 +213,7 @@ public class BrowseArchive extends AbstractVerticle {
    */
   private Future<String> listMetadataFormats(URL url) {
     Promise<String> promise = Promise.promise();
-    client.get(url.getAuthority(), url.getPath() + "?verb=ListMetadataFormats").send(ar -> {
+    prepareRequest(url,"verb=ListMetadataFormats").send(ar -> {
       String resp;
       if (ar.succeeded()) {
         HttpResponse<Buffer> oaiResponse = ar.result();
@@ -288,7 +279,7 @@ public class BrowseArchive extends AbstractVerticle {
         throw new NotAnOaiPmhResponseException(message);
       }
     } else {
-      String message = resp != null ? firstCharactersOf(resp, 2000) : " No response created.";
+      String message = resp != null ? first2000CharactersOf(resp) : " No response created.";
       throw new NotAnOaiPmhResponseException(message);
     }
     return prettyOaiXml;
@@ -297,14 +288,13 @@ public class BrowseArchive extends AbstractVerticle {
   /**
    * Return a chunk of the input 'str' for partial dump of it
    * @param str input string to cut off
-   * @param chars maximum length of the dump
    * @return chars characters of 'str'
    */
-  private String firstCharactersOf(String str, int chars) {
+  private String first2000CharactersOf(String str) {
     if (str != null) {
-      return str.substring(0, Math.min(str.length(),chars));
+      return str.substring(0, Math.min(str.length(),2000));
     } else {
-      return str;
+      return null;
     }
   }
 
@@ -320,5 +310,17 @@ public class BrowseArchive extends AbstractVerticle {
       port = 8088;
     }
     return port;
+  }
+
+  private HttpRequest<Buffer> prepareRequest (URL pURL, String query) {
+    String qry = (query.isEmpty() ? "" : "?" + query);
+    if (pURL.getProtocol().equals("https")) {
+      WebClient client = WebClient.create(vertx,
+              new WebClientOptions().setSsl(true));
+      return client.get(443, pURL.getAuthority(), pURL.getPath() + qry);
+    } else {
+      WebClient client = WebClient.create(vertx);
+      return client.get(pURL.getAuthority(), pURL.getPath() + qry);
+    }
   }
 }
