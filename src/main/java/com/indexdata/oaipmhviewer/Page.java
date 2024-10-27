@@ -20,7 +20,7 @@ import org.xml.sax.SAXException;
  * @author ne
  */
 public class Page {
-  private static String LS = System.lineSeparator();
+  private static final String LS = System.lineSeparator();
 
 
   /**
@@ -45,10 +45,10 @@ public class Page {
               String displayResponse,
               boolean gotOai) {
 
-    StringBuilder page = new StringBuilder("");
+    StringBuilder page = new StringBuilder();
 
     page.append("<head><title>OAI-PMH checker</title></head>").append(LS)
-        .append("<body style=\"font: normal 100%/100% Verdana, Arial, sans-serif;\" >").append(LS)
+        .append("<body style=\"font: normal 90%/90% Verdana, Arial, sans-serif;\" >").append(LS)
         .append(" <div>").append(LS)
         .append("<br>")
         .append(" <H1>OAI-PMH checker</H1>").append(LS)
@@ -56,7 +56,7 @@ public class Page {
         .append(" <form id=\"request\" method=\"post\" >").append(LS)
         .append("OAI-PMH URL&nbsp;&nbsp;")
         .append("<a title=\"hints\" href=\"\" ")
-        .append(" onclick=\"window.open('Hints', 'Hints', 'status=0,scrollbars=1,height=330,width=970').document.write('")
+        .append(" onclick=\"window.open('Hints', 'Hints', 'status=0,scrollbars=1,height=630,width=970').document.write('")
         .append(helpPage())
         .append("'); return false;\"><img alt=\"?\" src=\"static/images/help.png\" /></a>").append(LS)
         .append("<input type=\"text\" style=\"width:80%;\" id=\"oaiurl\" ")
@@ -65,7 +65,7 @@ public class Page {
         .append("  <input type=\"submit\" name=\"action\" value=\"Request\"> ")
         .append("<input type=\"submit\" name=\"action\" value=\"Clear\"><br>").append(LS);
 
-    if (finalOaiUrl.length() > 0 && gotOai) {
+    if (!finalOaiUrl.isEmpty() && gotOai) {
       page.append("<h3>Request options</h3>").append(LS)
           .append("<input type=\"submit\" name=\"verb\" value=\"Identify\"> ")
           .append("<input type=\"submit\" name=\"verb\" value=\"ListSets\"> ")
@@ -76,7 +76,7 @@ public class Page {
           .append("<input type=\"submit\" name=\"verb\" value=\"ListRecords\">").append(LS)
           .append("<br><br>").append(LS);
     }
-    if (finalOaiUrl.length() >0 ) {
+    if (!finalOaiUrl.isEmpty()) {
       page.append("<h3>Latest request sent</h3>").append(finalOaiUrl)
           .append("<br>").append(LS)
           .append("<h3>Latest response received</h3>").append(LS)
@@ -107,12 +107,11 @@ public class Page {
 
     /**
    * Creates HTML select tag from OAI-PMH ListSets request
-   * @param metadataFormats OAI-PMH XML containing available sets
    * @param selected defines the currently selected set
    * @return HTML select list
    */
   private static String setsSelectList (String sets, String selected) {
-    StringBuilder selectList = new StringBuilder("");
+    StringBuilder selectList = new StringBuilder();
     try {
       Element node =  DocumentBuilderFactory
         .newInstance()
@@ -120,14 +119,15 @@ public class Page {
         .parse(new ByteArrayInputStream(sets.getBytes()))
         .getDocumentElement();
       NodeList setElements = node.getElementsByTagName("setSpec");
-      selectList.append("<select id=\"set\" name=\"set\">" +LS);
-      selectList.append("<option value=\"\">Select set</option>");
+      selectList.append("<select id=\"set\" name=\"set\">")
+              .append(LS)
+              .append("<option value=\"\">Select set</option>");
       for (int i=0; i<setElements.getLength(); i++) {
         String value = setElements.item(i).getTextContent();
         selectList.append("<option value=\"").append(value).append("\"")
                   .append(value.equals(selected) ? " selected " : "")
-                  .append(">");
-        selectList.append(value).append("</option>").append(LS);
+                  .append(">")
+                  .append(value).append("</option>").append(LS);
       }
       selectList.append("</select>").append(LS);
       return selectList.toString();
@@ -144,7 +144,7 @@ public class Page {
    * @return HTML select list
    */
   private static String metadataPrefixSelectList (String metadataFormats, String selected) {
-    StringBuilder selectList = new StringBuilder("");
+    StringBuilder selectList = new StringBuilder();
     try {
       Element node =  DocumentBuilderFactory
         .newInstance()
@@ -152,14 +152,14 @@ public class Page {
         .parse(new ByteArrayInputStream(metadataFormats.getBytes()))
         .getDocumentElement();
       NodeList setElements = node.getElementsByTagName("metadataPrefix");
-      selectList.append("<select id=\"metadataPrefix\" name=\"metadataPrefix\">" +LS);
-      selectList.append("<option value=\"\">Select metadataPrefix</option>");
+      selectList.append("<select id=\"metadataPrefix\" name=\"metadataPrefix\">")
+              .append(LS)
+              .append("<option value=\"\">Select metadataPrefix</option>");
       for (int i=0; i<setElements.getLength(); i++) {
         String value = setElements.item(i).getTextContent();
         selectList.append("<option value=\"").append(value).append("\"")
                   .append(value.equals(selected) ? " selected " : "")
-                  .append(">");
-        selectList.append(value).append("</option>").append(LS);
+                  .append(">").append(value).append("</option>").append(LS);
       }
       selectList.append("</select>").append(LS);
       return selectList.toString();
@@ -174,31 +174,40 @@ public class Page {
    * @return Help page as a string
    */
   private static String helpPage () {
-    StringBuilder text = new StringBuilder("");
-    text.append("<html><head><title>Hints</title></head>")
-        .append("<body style=\\'font: normal 100%/100% Verdana, Arial, sans-serif;\\'>")
-        .append("<h3>Hints</h3>")
-        .append("Enter the URL of an OAI-PMH service you would like to test. The URL can be an OAI-PMH base URL or a complete OAI-PMH query.")
-        .append("<br><br>")
-        .append("A base URL could look like this:")
-        .append("<br><br>")
-        .append("&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request</b>")
-        .append("<br><br>")
-        .append("A complete query for that same base URL could be:")
-        .append("<br><br>")
-        .append("&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request?verb=ListRecords&set=myset&metadataPrefix=marc21</b>")
-        .append("<br><br>In either case, once this service has recognized the URL as ")
-        .append("pointing to an OAI-PMH end-point, it will offer some options for runnning ")
-        .append("various simple requests against that server.")
-        .append("<br><br>")
-        .append("At any time, an arbitrary OAI-PMH request can be made by ")
-        .append("typing or pasting a complete request URL into the input field and clicking \\'Request\\' or hitting Enter ")
-        .append("<br><br>")
-        .append("<div align=\\'center\\'><input type=\\'button\\' onclick=\\'self.close()\\' value=\\'OK\\'/></div>")
-        .append("</body>")
-        .append("</html>");
-
-    return text.toString();
+      return "<html><head><title>Hints</title></head>" +
+              "<body style=\\'font: normal 100%/100% Verdana, Arial, sans-serif;\\'>" +
+              "<h3>Hints</h3>" +
+              "Enter the URL of an OAI-PMH service you would like to test. The URL can be an OAI-PMH base URL or a complete OAI-PMH query." +
+              "<br><br>" +
+              "A base URL could look like this:" +
+              "<br><br>" +
+              "&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request</b>" +
+              "<br><br>" +
+              "A complete query for that same base URL could be:" +
+              "<br><br>" +
+              "&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request?verb=ListRecords&set=myset&metadataPrefix=marc21</b>" +
+              "<br><br>In either case, once this service has recognized the URL as " +
+              "pointing to an OAI-PMH end-point, it will offer some options for runnning " +
+              "various simple requests against that server." +
+              "<br><br>" +
+              "At any time, an arbitrary OAI-PMH request can be made by " +
+              "typing or pasting a complete request URL into the input field and clicking \\'Request\\' or hitting Enter " +
+              "<br><br>" +
+              "<h4>Example showing the use of a resumption token in a ListRecords request</h4>" +
+              "&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request?verb=ListRecords&resumptionToken=MYRESUMPTIONTOKEN</b>" +
+              "<br><br>" +
+              "Use the value in the <resumptionToken> tag at the bottom of the previous response." +
+              "<br><br>" +
+              "<h4>Example retrieving a specific record</h4>" +
+              "Use a GetRecord request:" +
+              "<br><br>" +
+              "&nbsp;&nbsp;<b>http://my.oaiserver.com/view/oai/MY_INST_CODE/request?verb=GetRecord&identifier=oai:alma.01XYZ_INST:123456789&metadataPrefix=marc21</b>" +
+              "<br><br>" +
+              "The ListRecords response includes the identifier for each record in the < header > tag." +
+              "<br><br>" +
+              "<div align=\\'center\\'><input type=\\'button\\' onclick=\\'self.close()\\' value=\\'OK\\'/></div>" +
+              "</body>" +
+              "</html>";
   }
 
 }
