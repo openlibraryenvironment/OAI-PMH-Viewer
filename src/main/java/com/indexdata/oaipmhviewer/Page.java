@@ -76,6 +76,7 @@ public class Page {
           .append("<input type=\"submit\" name=\"verb\" value=\"ListRecords\">").append(LS)
           .append("<br><br>").append(LS);
     }
+    page.append( " </form>");
     if (!finalOaiUrl.isEmpty()) {
       page.append("<h3>Latest request sent</h3>").append(finalOaiUrl)
           .append("<br>").append(LS)
@@ -83,8 +84,7 @@ public class Page {
           .append("<textarea rows=\"30\" style=\"width:98%;\" name=\"results\" >")
           .append(displayResponse).append("</textarea>").append(LS);
     }
-
-    page.append( " </form>").append(LS).append("</div>").append(LS).append("</body>");
+    page.append(LS).append("</div>").append(LS).append("</body>");
     return page.toString();
   }
 
