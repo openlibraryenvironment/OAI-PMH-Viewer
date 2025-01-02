@@ -1,0 +1,78 @@
+name: Build and deploy listener
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  K8S_NAMESPACE: reshare
+  K8S_DEPLOYMENT: oai-pmh-viewer
+  JAVA_VERSION: 8
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+      checks: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'adopt'
+
+      - run: mvn install
+
+      - name: Log in to the Container registry
+        #if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/main' || contains(github.ref, 'release') }}
+        if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/DEVOPS-5009-ci' || contains(github.ref, 'release') }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        #if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/main' || contains(github.ref, 'release') }}
+        if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/DEVOPS-5009-ci' || contains(github.ref, 'release') }}
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+ 
+      # master and main
+      - name: Build and push Docker image
+        #if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/main' }}
+        if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/DEVOPS-5009-ci' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # extra tags for release branch
+      - name: Build and push Docker image
+        if: ${{ contains(github.ref, 'release') }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}, ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:rc
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Deploy latest to K8s
+        #if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/main' }}
+        if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/DEVOPS-5009-ci' }}
+        uses: actions-hub/kubectl@v1.21.2
+        env:
+          KUBE_CONFIG: ${{ secrets.RESHARE_DEV_SA_KUBECONFIG }}
+        with:
+          args:
+            -n ${{ env.K8S_NAMESPACE }} rollout restart deployment ${{ env.K8S_DEPLOYMENT }}
