@@ -30,8 +30,7 @@ jobs:
       - run: mvn install
 
       - name: Log in to the Container registry
-        #if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/main' || contains(github.ref, 'release') }}
-        if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/DEVOPS-5009-ci' || contains(github.ref, 'release') }}
+        if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/main' || contains(github.ref, 'release') }}
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -39,8 +38,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
-        #if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/main' || contains(github.ref, 'release') }}
-        if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/DEVOPS-5009-ci' || contains(github.ref, 'release') }}
+        if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/main' || contains(github.ref, 'release') }}
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -48,8 +46,7 @@ jobs:
  
       # master and main
       - name: Build and push Docker image
-        #if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/main' }}
-        if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/DEVOPS-5009-ci' }}
+        if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/main' }}
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -68,8 +65,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Deploy latest to K8s
-        #if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/main' }}
-        if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/DEVOPS-5009-ci' }}
+        if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/main' }}
         uses: actions-hub/kubectl@v1.21.2
         env:
           KUBE_CONFIG: ${{ secrets.RESHARE_DEV_SA_KUBECONFIG }}
