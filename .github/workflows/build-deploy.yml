@@ -8,6 +8,7 @@ env:
   JAVA_VERSION: 8
 on:
   push:
+  workflow_dispatch:
 
 jobs:
   build:
