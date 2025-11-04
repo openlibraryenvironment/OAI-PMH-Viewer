@@ -1,4 +1,4 @@
-FROM openjdk:8-jre-alpine
+FROM folioci/alpine-jre-openjdk21:latest
 
 ARG VERSION=1.1.0-SNAPSHOT
 
