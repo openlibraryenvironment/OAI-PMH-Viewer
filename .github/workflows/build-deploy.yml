@@ -5,9 +5,10 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   K8S_NAMESPACE: reshare
   K8S_DEPLOYMENT: oai-pmh-viewer
-  JAVA_VERSION: 8
+  JAVA_VERSION: 21
 on:
   push:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -20,12 +21,13 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'adopt'
+          distribution: 'temurin'
+          cache: 'maven'
 
       - run: mvn install
 
@@ -66,7 +68,7 @@ jobs:
 
       - name: Deploy latest to K8s
         if: ${{ github.ref == 'refs/heads/master' || github.ref  == 'refs/heads/main' }}
-        uses: actions-hub/kubectl@v1.21.2
+        uses: actions-hub/kubectl@v1.34.1
         env:
           KUBE_CONFIG: ${{ secrets.RESHARE_DEV_SA_KUBECONFIG }}
         with:
