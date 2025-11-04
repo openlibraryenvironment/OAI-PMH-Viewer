@@ -3,6 +3,7 @@ package com.indexdata.oaipmhviewer;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 
@@ -27,7 +28,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
@@ -59,7 +59,7 @@ public class BrowseArchive extends AbstractVerticle {
     // Handle POSTed FORM data
     router.route().handler(BodyHandler.create());
 
-    router.route().handler(FaviconHandler.create());
+    router.route().handler(FaviconHandler.create(vertx));
     router.route("/static/*").handler(StaticHandler.create("static"));
 
     router.route().handler(routingContext -> {
@@ -77,7 +77,7 @@ public class BrowseArchive extends AbstractVerticle {
         try {
           // Allow user to enter URI without protocol, but assume http then.
           pURL = (inputOaiUrl.matches("https?://.*") ?
-                  new URL(inputOaiUrl) : new URL("http://"+inputOaiUrl));
+                  new URI(inputOaiUrl).toURL() : new URI("http://"+inputOaiUrl).toURL());
 
           String query;
           if (Arrays.asList("Identify",
@@ -107,7 +107,7 @@ public class BrowseArchive extends AbstractVerticle {
                     String displayOaiResponse = prettyPrintOaiResponse(oaiResponse.body().toString());
                     Future<String> promisedSets = listSets(pURL);
                     Future<String> promisedFormats = listMetadataFormats(pURL);
-                    CompositeFuture.all(promisedSets, promisedFormats).onComplete( cfar -> {
+                    Future.all(promisedSets, promisedFormats).onComplete( cfar -> {
                       String listSets = cfar.result().resultAt(0).toString();
                       String listMetadataFormats = cfar.result().resultAt(1).toString();
                       String page = Page.getHtml(inputOaiUrl,
