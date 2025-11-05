@@ -7,7 +7,7 @@ Bare bones web service for entering an OAI-PMH URL, verifying that the URL retri
 The service presents as a HTML form that responds to manual user input
 
 ## Prerequisites
-- Java 8 JDK
+- Java 21 JDK
 - Maven 3.6.0
 
 ## Building

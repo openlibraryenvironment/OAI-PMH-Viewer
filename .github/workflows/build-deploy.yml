@@ -57,7 +57,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       # extra tags for release branch
-      - name: Build and push Docker image
+      - name: Build and push Docker image for release
         if: ${{ contains(github.ref, 'release') }}
         uses: docker/build-push-action@v6
         with:
